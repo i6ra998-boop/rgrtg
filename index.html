@@ -198,27 +198,44 @@
 </head>
 <script>
 function printTable() {
-    const table = document.querySelector('#sec-schedule .card').innerHTML;
+    // نجيب جدول الجدول الدراسي فقط
+    const table = document.querySelector('#sec-schedule table.schedule');
+
+    if (!table) {
+        alert("الجدول غير موجود!");
+        return;
+    }
+
+    // نفتح نافذة طباعة
     const printWindow = window.open('', '', 'width=900,height=600');
+
+    // نكتب محتويات الطباعة
     printWindow.document.write(`
         <html>
         <head>
             <title>طباعة الجدول</title>
             <style>
                 body { font-family: Tahoma; direction: rtl; }
-                table { width:100%; border-collapse:collapse; }
+                table { width:100%; border-collapse: collapse; margin-top:10px; }
                 th, td { border:1px solid #ccc; padding:8px; text-align:center; }
             </style>
         </head>
         <body>
-            ${table}
+            <h3 style="text-align:center;">الجدول الدراسي</h3>
+            ${table.outerHTML}
         </body>
         </html>
     `);
+
     printWindow.document.close();
-    printWindow.print();
+
+    // ننتظر شوي عشان الأحمال بعدها نطبع
+    setTimeout(() => {
+        printWindow.print();
+    }, 300);
 }
 </script>
+
 
 <body>
 
