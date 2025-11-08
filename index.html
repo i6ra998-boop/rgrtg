@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>بطاقة الطالب - QR</title>
 <style>
   :root{
@@ -182,10 +182,44 @@
     -webkit-overflow-scrolling: touch;
   }
   table {
-    min-width: 700px;
+    min-width: 900px;
+  }
+  .print-btn {
+    background-color: #228070;
+    color:white;
+    border:none;
+    padding: 8px 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    font-size: 15px;
   }
 </style>
 </head>
+<script>
+function printTable() {
+    const table = document.querySelector('#sec-schedule .card').innerHTML;
+    const printWindow = window.open('', '', 'width=900,height=600');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>طباعة الجدول</title>
+            <style>
+                body { font-family: Tahoma; direction: rtl; }
+                table { width:100%; border-collapse:collapse; }
+                th, td { border:1px solid #ccc; padding:8px; text-align:center; }
+            </style>
+        </head>
+        <body>
+            ${table}
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+</script>
+
 <body>
 
   <!-- هيدر بشعار الجامعة -->
@@ -285,7 +319,8 @@
               <td>الخميس</td><td>اللغة الانجليزية (3)</td><td>73907</td><td>1030 - 1229</td><td>خد82</td><td>1010</td><td>تمييم بن الطاهر عطالله</td><td>528</td><td>نظري</td>
             </tr>
           </tbody>
-        </table>
+        </table><br>
+        <button class="print-btn" onclick="printtable()">طباعة الجدول</button>
       </div>
       </div>
     </section>
@@ -403,7 +438,3 @@
 </script>
 </body>
 </html>
-
-
-
-
