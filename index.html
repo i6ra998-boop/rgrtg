@@ -1,49 +1,397 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>بيانات الطالب</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>بطاقة الطالب - QR</title>
 <style>
-    body {
-        font-family: Tahoma;
-        background: #f4f4f4;
-        padding: 20px;
-    }
-    .card {
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        margin-bottom: 15px;
-        box-shadow: 0 0 10px #ccc;
-    }
-    h2 { color: #006b6b; }
+  :root{
+    --uni-green:#004D40;   /* لون الجامعة */
+    --uni-green-2:#00695C; /* تدرّج أفتح للتبويبات */
+    --light:#ffffff;
+    --muted:#f5f5f5;
+    --text:#111;
+    --card:#ffffff;
+    --warn1:#FFF3CD;   /* أصفر فاتح */
+    --warn2:#FFE6CC;   /* برتقالي فاتح */
+    --denied:#F17C7A;  /* أحمر فاتح */
+    --normal:#F5F5F5;  /* رمادي فاتح */
+    --border:#E0E0E0;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family: "Tahoma", system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans Arabic", "Segoe UI Symbol";
+    background:#fafafa;
+    color:var(--text);
+  }
+
+  /* Header */
+  .header{
+    background:var(--uni-green);
+    color:#fff;
+    height:75px;
+    display:flex;
+    align-items:center;
+    justify-content:center; /* الشعار في النص */
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  .header .logo{
+    height:56px; max-width:220px; object-fit:contain;
+    filter: drop-shadow(0 0 0 rgba(0,0,0,.0));
+  }
+
+  /* Tabs bar */
+  .tabs{
+    background:linear-gradient(0deg, var(--uni-green-2), var(--uni-green-2));
+    padding:8px 12px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .tab{
+    background:#fff;
+    color:var(--uni-green);
+    border:1px solid rgba(0,0,0,.08);
+    padding:8px 14px;
+    border-radius:10px;
+    font-weight:700;
+    cursor:pointer;
+    transition:.15s ease;
+    user-select:none;
+  }
+  .tab:hover{ transform: translateY(-1px); }
+  .tab.active{
+    background:var(--uni-green);
+    color:#fff;
+    border-color:transparent;
+  }
+
+  /* Container */
+  .container{
+    max-width:1100px; /* عرض جميل للجوال والدسكتوب */
+    margin:18px auto;
+    padding:0 14px;
+  }
+
+  /* Sections */
+  section{ display:none; }
+  section.active{ display:block; }
+
+  /* Cards */
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:16px 18px;
+    margin-bottom:14px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .card-title{
+    font-weight:800;
+    font-size:20px;
+    margin:0 0 8px;
+  }
+  .meta{
+    display:flex; gap:12px; flex-wrap:wrap; color:#444; font-size:14px;
+  }
+
+  /* جدول الدراسة */
+  .schedule{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+    overflow:hidden;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:#fff;
+  }
+  .schedule thead th{
+    background:#ECECEC;  /* نفس اللي اعتمدناه لاحقاً */
+    color:#000;
+    text-align:center;
+    padding:12px 8px;
+    font-weight:800;
+    font-size:14px;
+  }
+  .schedule tbody td{
+    padding:12px 8px; text-align:center; border-top:1px solid var(--border);
+    font-size:14px; color:#000;
+  }
+
+  /* ألوان الأيام */
+  tr.day-sun    { background:#FFA07A33; } /* Salmon خفيف */
+  tr.day-mon    { background:#90EE9033; } /* LightGreen خفيف */
+  tr.day-tue    { background:#00FFFF33; } /* Cyan خفيف */
+  tr.day-wed    { background:#87CEFA33; } /* LightSkyBlue خفيف */
+  tr.day-thu    { background:#FAF0E633; } /* Beige خفيف */
+
+  /* كروت الغياب */
+  .absence-card{
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:12px;
+    background:var(--card);
+  }
+  .absence-card.normal { background:var(--normal); }
+  .absence-card.warn1  { background:var(--warn1); }
+  .absence-card.warn2  { background:var(--warn2); }
+  .absence-card.denied { background:var(--denied); }
+
+  .absence-head{
+    display:flex; flex-wrap:wrap; align-items:center; gap:10px; justify-content:space-between; margin-bottom:8px;
+  }
+  .absence-title{ font-weight:800; font-size:18px; }
+  .badge{
+    border-radius:999px; padding:6px 10px; font-weight:800; font-size:12px; color:#000;
+    background:#fff2; border:1px solid #0001;
+  }
+  .sessions{ margin-top:6px; font-size:14px; color:#222; }
+  .sessions .row{ margin:4px 0; }
+
+  /* Progress (الساعات) */
+  .progress-wrap{
+    background:#fff; border:1px solid var(--border); border-radius:14px; padding:16px;
+  }
+  .progress-bar{
+    height:14px; background:#EAEAEA; border-radius:999px; overflow:hidden; margin:8px 0 4px;
+  }
+  .progress-bar > i{
+    display:block; height:100%; width:0%; background:var(--uni-green); transition:width .5s ease;
+  }
+  .progress-meta{ display:flex; gap:16px; flex-wrap:wrap; font-weight:700; }
+
+  /* شخصي */
+  .grid{
+    display:grid; grid-template-columns: 1fr 1fr; gap:12px;
+  }
+  .kv{ background:#fff; border:1px solid var(--border); border-radius:10px; padding:10px 12px; }
+  .kv b{ color:#333 }
+  .kv span{ color:#444 }
+
+  /* Responsive */
+  @media (max-width:780px){
+    .grid{ grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>📌 بيانات الطالب</h2>
-    <p><b>الاسم:</b> إبراهيم علي حسن الشايؤش</p>
-    <p><b>الرقم الجامعي:</b> 225010624</p>
-</div>
+  <!-- هيدر بشعار الجامعة -->
+  <header class="header">
+    <!-- بدّل src إلى شعار جامعتك -->
+    <img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/King_Faisal_University_logo.svg/512px-King_Faisal_University_logo.svg.png" alt="شعار الجامعة">
+  </header>
 
-<div class="card">
-    <h2>📘 الساعات</h2>
-    <p>الساعات المنجزة: 32</p>
-    <p>الساعات المتبقية: 28</p>
-</div>
+  <!-- شريط التبويبات -->
+  <nav class="tabs container" id="tabs">
+    <button class="tab active" data-target="sec-profile">المعلومات الشخصية</button>
+    <button class="tab" data-target="sec-schedule">الجدول الدراسي</button>
+    <button class="tab" data-target="sec-absence">الغيابات</button>
+    <button class="tab" data-target="sec-hours">الساعات المنجزة</button>
+  </nav>
 
-<div class="card">
-    <h2>📊 الغياب</h2>
-    <p>نظم دعم القرار — 8%</p>
-    <p>تصميم واجهات — 25%</p>
-</div>
+  <main class="container">
 
-<div class="card">
-    <h2>🎓 الدرجات</h2>
-    <p>برمجة مرئية — A</p>
-    <p>تحليل نظم — B+</p>
-</div>
+    <!-- المعلومات الشخصية (كما هي) -->
+    <section id="sec-profile" class="active">
+      <div class="card">
+        <h3 class="card-title">المعلومات الشخصية</h3>
+        <div class="grid">
+          <div class="kv"><b>الاسم:</b> <span>إبراهيم علي بن حسن الشاوش</span></div>
+          <div class="kv"><b>الرقم الجامعي:</b> <span>12345678</span></div>
+          <div class="kv"><b>الكلية:</b> <span>التطبيقية</span></div>
+          <div class="kv"><b>التخصص:</b> <span>نظم المعلومات</span></div>
+        </div>
+      </div>
+    </section>
 
+    <!-- الجدول الدراسي -->
+    <section id="sec-schedule">
+      <div class="card">
+        <h3 class="card-title">الجدول الدراسي للفصل الأول 1447</h3>
+        <table class="schedule" aria-label="الجدول الدراسي">
+          <thead>
+            <tr>
+              <th>اليوم</th>
+              <th>مسمى المقرر</th>
+              <th>CRN</th>
+              <th>وقت المحاضرة</th>
+              <th>المبنى</th>
+              <th>القاعة</th>
+              <th>اسم المدرس</th>
+              <th>الشعبة</th>
+              <th>نوع الجدول</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- الأحد -->
+            <tr class="day-sun">
+              <td>الأحد</td><td>تصميم واجهات الاستخدام</td><td>72551</td><td>0730 - 0859</td><td>خد118</td><td>1010</td><td>احمد عبدالقادر فضل عثمان</td><td>521</td><td>نظري</td>
+            </tr>
+            <tr class="day-sun">
+              <td>الأحد</td><td>تحليل وتصميم النظم (2)</td><td>72555</td><td>0900 - 1029</td><td>خد80</td><td>1033</td><td>احمد عبدالقادر فضل عثمان</td><td>521</td><td>نظري</td>
+            </tr>
+            <tr class="day-sun">
+              <td>الأحد</td><td>البرمجة المرئية</td><td>72553</td><td>1130 - 1229</td><td>خد118</td><td>1011</td><td>منصور راتب محمد عبيدات</td><td>521</td><td>نظري</td>
+            </tr>
+            <tr class="day-sun">
+              <td>الأحد</td><td>اللغة الانجليزية (3)</td><td>73907</td><td>2000 - 2159</td><td></td><td></td><td>تمييم بن الطاهر عطالله</td><td>528</td><td>نظري</td>
+            </tr>
+            <!-- الاثنين -->
+            <tr class="day-mon">
+              <td>الاثنين</td><td>البرمجة المرئية</td><td>72553</td><td>0730 - 0859</td><td>خد118</td><td>1011</td><td>منصور راتب محمد عبيدات</td><td>521</td><td>نظري</td>
+            </tr>
+            <tr class="day-mon">
+              <td>الاثنين</td><td>نظم دعم اتخاذ القرار</td><td>72557</td><td>0900 - 1029</td><td>خد80</td><td>1034</td><td>محمد عوض محمد عطا الفضيل</td><td>521</td><td>نظري</td>
+            </tr>
+            <tr class="day-mon">
+              <td>الاثنين</td><td>اللغة الانجليزية (3)</td><td>73907</td><td>1030 - 1229</td><td>خد82</td><td>1010</td><td>تمييم بن الطاهر عطالله</td><td>528</td><td>نظري</td>
+            </tr>
+            <!-- الثلاثاء -->
+            <tr class="day-tue">
+              <td>الثلاثاء</td><td>تصميم واجهات الاستخدام</td><td>72551</td><td>0730 - 0859</td><td>خد118</td><td>1010</td><td>احمد عبدالقادر فضل عثمان</td><td>521</td><td>نظري</td>
+            </tr>
+            <tr class="day-tue">
+              <td>الثلاثاء</td><td>تحليل وتصميم النظم (2)</td><td>72555</td><td>0900 - 1029</td><td>خد80</td><td>1033</td><td>احمد عبدالقادر فضل عثمان</td><td>521</td><td>نظري</td>
+            </tr>
+            <tr class="day-tue">
+              <td>الثلاثاء</td><td>اللغة الانجليزية (3)</td><td>73907</td><td>1200 - 1359</td><td>خد80</td><td>1033</td><td>تمييم بن الطاهر عطالله</td><td>528</td><td>نظري</td>
+            </tr>
+            <!-- الأربعاء -->
+            <tr class="day-wed">
+              <td>الأربعاء</td><td>البرمجة المرئية</td><td>72553</td><td>0730 - 0859</td><td>خد118</td><td>1011</td><td>منصور راتب محمد عبيدات</td><td>521</td><td>نظري</td>
+            </tr>
+            <tr class="day-wed">
+              <td>الأربعاء</td><td>نظم دعم اتخاذ القرار</td><td>72557</td><td>0900 - 1029</td><td>خد80</td><td>1034</td><td>محمد عوض محمد عطا الفضيل</td><td>521</td><td>نظري</td>
+            </tr>
+            <tr class="day-wed">
+              <td>الأربعاء</td><td>اللغة الانجليزية (3)</td><td>73907</td><td>1030 - 1229</td><td>خد82</td><td>1010</td><td>تمييم بن الطاهر عطالله</td><td>528</td><td>نظري</td>
+            </tr>
+            <!-- الخميس -->
+            <tr class="day-thu">
+              <td>الخميس</td><td>اللغة الانجليزية (3)</td><td>73907</td><td>1030 - 1229</td><td>خد82</td><td>1010</td><td>تمييم بن الطاهر عطالله</td><td>528</td><td>نظري</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- الغيابات -->
+    <section id="sec-absence">
+      <!-- نظم دعم اتخاذ القرار – تحذير أول -->
+      <div class="absence-card warn1">
+        <div class="absence-head">
+          <div class="absence-title">نظم دعم اتخاذ القرار — CRN: 3223107 — الشعبة: 52</div>
+          <span class="badge">نسبة الغياب: 8.2٪ (تحذير أول)</span>
+        </div>
+        <div class="sessions">
+          <div class="row">الأحد | 1447/02/25 | 2025/08/10 | 09:00 - 10:29 | رقم المحاضرة: 10</div>
+          <div class="row">الأحد | 1447/02/28 | 2025/08/13 | 09:00 - 10:29 | رقم المحاضرة: 17</div>
+        </div>
+      </div>
+
+      <!-- تحليل وتصميم النظم (2) – طبيعي -->
+      <div class="absence-card normal">
+        <div class="absence-head">
+          <div class="absence-title">تحليل وتصميم النظم (2) — CRN: 3223105 — الشعبة: 51</div>
+          <span class="badge">نسبة الغياب: 0٪ (طبيعي)</span>
+        </div>
+        <div class="sessions">لا توجد غيابات مسجلة لهذه المادة.</div>
+      </div>
+
+      <!-- البرمجة المرئية – طبيعي -->
+      <div class="absence-card normal">
+        <div class="absence-head">
+          <div class="absence-title">البرمجة المرئية — CRN: 3223106 — الشعبة: 52</div>
+          <span class="badge">نسبة الغياب: 0٪ (طبيعي)</span>
+        </div>
+        <div class="sessions">لا توجد غيابات مسجلة لهذه المادة.</div>
+      </div>
+
+      <!-- اللغة الإنجليزية (3) – تحذير ثاني -->
+      <div class="absence-card warn2">
+        <div class="absence-head">
+          <div class="absence-title">اللغة الانجليزية (3) — CRN: 3223107 — الشعبة: 53</div>
+          <span class="badge">نسبة الغياب: 10٪ (تحذير ثاني)</span>
+        </div>
+        <div class="sessions">
+          <div class="row">الأحد | 1447/02/25 | 2025/08/10 | 08:00 - 09:29 | رقم المحاضرة: 10</div>
+          <div class="row">الأحد | 1447/02/28 | 2025/08/13 | 08:00 - 09:29 | رقم المحاضرة: 17</div>
+        </div>
+      </div>
+
+      <!-- تصميم واجهات الاستخدام – حرمان -->
+      <div class="absence-card denied">
+        <div class="absence-head">
+          <div class="absence-title">تصميم واجهات الاستخدام — CRN: 3223108 — الشعبة: 54</div>
+          <span class="badge">نسبة الغياب: 25٪ (حرمان)</span>
+        </div>
+        <div class="sessions">
+          <div class="row">الأربعاء | 1447/03/25 | 2025/08/14 | 09:00 - 10:29 | رقم المحاضرة: 10</div>
+          <div class="row">الخميس | 1447/04/28 | 2025/08/19 | 09:00 - 10:29 | رقم المحاضرة: 17</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- الساعات المنجزة -->
+    <section id="sec-hours">
+      <div class="card">
+        <h3 class="card-title">الساعات المنجزة</h3>
+        <div class="progress-wrap">
+          <div class="progress-meta">
+            <div>🎓 الساعات المنجزة: <b id="doneHours">32</b></div>
+            <div>📘 الساعات المطلوبة: <b id="totalHours">61</b></div>
+            <div>⏳ المتبقية: <b id="leftHours">29</b></div>
+          </div>
+          <div class="progress-bar" aria-label="شريط التقدم">
+            <i id="progressFill" style="width:0%"></i>
+          </div>
+          <div style="font-weight:700; margin-top:6px;">باقي لك <span id="leftHours2">29</span> ساعة وتتخرج 🎓🔥</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+<script>
+  // تبويبات
+  const tabs = document.querySelectorAll('.tab');
+  const sections = document.querySelectorAll('main section');
+  tabs.forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      tabs.forEach(t=>t.classList.remove('active'));
+      sections.forEach(s=>s.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.target).classList.add('active');
+      // لو انتقلت للساعات: حدّث الشريط
+      if (tab.dataset.target === 'sec-hours') updateProgress();
+    });
+  });
+
+  // شريط التقدم
+  function updateProgress(){
+    const done = 32;  // منجز
+    const total = 61; // إجمالي
+    const left  = Math.max(total - done, 0);
+    const pct = Math.min(Math.round((done / total) * 100), 100);
+
+    document.getElementById('doneHours').textContent  = done;
+    document.getElementById('totalHours').textContent = total;
+    document.getElementById('leftHours').textContent  = left;
+    document.getElementById('leftHours2').textContent = left;
+
+    const fill = document.getElementById('progressFill');
+    requestAnimationFrame(()=>{ fill.style.width = pct + '%'; });
+  }
+
+  // حدّث شريط التقدم أول مرة
+  updateProgress();
+</script>
 </body>
 </html>
+
